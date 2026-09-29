@@ -3,72 +3,121 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-
-# Project root
+# PROJECT ROOT
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load .env
+# LOAD LOCAL .env
 load_dotenv(BASE_DIR / ".env")
 
+# STREAMLIT SECRETS
+
+try:
+    import streamlit as st
+
+    STREAMLIT_SECRETS = st.secrets
+
+except Exception:
+    STREAMLIT_SECRETS = {}
+
+
+def get_config(key, default=None):
+    """
+    Get configuration value from:
+    1. Environment variable (.env locally)
+    2. Streamlit Secrets (Streamlit Cloud)
+    3. Default value
+    """
+
+    value = os.getenv(key)
+
+    if value is not None:
+        return value
+
+    try:
+        value = STREAMLIT_SECRETS.get(key)
+    except Exception:
+        value = None
+
+    if value is not None:
+        return value
+
+    return default
+
 # API KEYS
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
+GEMINI_API_KEY = get_config("GEMINI_API_KEY")
+
+PINECONE_API_KEY = get_config("PINECONE_API_KEY")
+
 
 if not GEMINI_API_KEY:
-    raise ValueError("GEMINI_API_KEY is missing from .env")
+    raise ValueError("GEMINI_API_KEY is missing")
+
 
 if not PINECONE_API_KEY:
-    raise ValueError("PINECONE_API_KEY is missing from .env")
+    raise ValueError("PINECONE_API_KEY is missing")
 
 # PINECONE
-PINECONE_INDEX_NAME = os.getenv(
+PINECONE_INDEX_NAME = get_config(
     "PINECONE_INDEX_NAME",
     "rag-agentic-ai"
 )
 
-PINECONE_CLOUD = os.getenv(
+PINECONE_CLOUD = get_config(
     "PINECONE_CLOUD",
     "aws"
 )
 
-PINECONE_REGION = os.getenv(
+PINECONE_REGION = get_config(
     "PINECONE_REGION",
     "us-east-1"
 )
 
 # GEMINI
-GEMINI_LLM_MODEL = os.getenv(
+GEMINI_LLM_MODEL = get_config(
     "GEMINI_LLM_MODEL",
-    "gemini-2.5-flash"
+    "gemini-3.5-flash-lite"
 )
 
-GEMINI_EMBEDDING_MODEL = os.getenv(
+GEMINI_EMBEDDING_MODEL = get_config(
     "GEMINI_EMBEDDING_MODEL",
     "gemini-embedding-001"
 )
 
 # RAG CONFIGURATION
-
 EMBEDDING_DIMENSION = int(
-    os.getenv("EMBEDDING_DIMENSION", "768")
+    get_config(
+        "EMBEDDING_DIMENSION",
+        "768"
+    )
 )
 
 CHUNK_SIZE = int(
-    os.getenv("CHUNK_SIZE", "1000")
+    get_config(
+        "CHUNK_SIZE",
+        "1000"
+    )
 )
 
 CHUNK_OVERLAP = int(
-    os.getenv("CHUNK_OVERLAP", "150")
+    get_config(
+        "CHUNK_OVERLAP",
+        "150"
+    )
 )
 
 TOP_K = int(
-    os.getenv("TOP_K", "5")
+    get_config(
+        "TOP_K",
+        "5"
+    )
 )
 
 MIN_RELEVANCE_SCORE = float(
-    os.getenv("MIN_RELEVANCE_SCORE", "0.35")
+    get_config(
+        "MIN_RELEVANCE_SCORE",
+        "0.35"
+    )
 )
 
-# DATA
 
 PDF_PATH = BASE_DIR / "data" / "Ebook-Agentic-AI.pdf"
